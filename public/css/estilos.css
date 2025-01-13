@@ -1,0 +1,13 @@
+.par
+{
+    width: 70%;
+    background-color: #999999;
+    color: white;
+}
+
+.impar
+{
+    width: 70%;
+    background-color: #cccccc;
+    color: black;
+}

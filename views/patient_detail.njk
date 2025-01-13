@@ -1,0 +1,15 @@
+{% extends "base.njk" %}
+
+{% block titulo %}Pacientes | Ficha{% endblock %}
+
+{% block contenido %}
+
+    <h1>Ficha de un paciente</h1>
+
+    <p><strong>Name:</strong> {{ patient.name }}</p>
+    <p><strong>Surname:</strong> {{ patient.surname }}</p>
+    <p><strong>Birth Date:</strong> {{ patient.birthDate }}</p>
+    <p><strong>Address:</strong> {{ patient.address }}</p>
+    <p><strong>Insurance number:</strong> {{ patient.insuranceNumber }}</p>
+
+{% endblock %}

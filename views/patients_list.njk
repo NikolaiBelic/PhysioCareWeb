@@ -1,0 +1,28 @@
+{% extends "base.njk" %}
+{% block titulo %}Pacientes | Listado{% endblock %}
+{% block contenido %}
+    <h1>Listado de pacientes</h1>
+    <table width="100%">
+        {% for patient in patients %}
+            <tr>
+                {% if loop.index % 2 == 0 %}
+                    <td class="par">{{ patient.name }} {{ patient.surname }}</td>
+                {% else %}
+                    <td class="impar">{{ patient.name }} {{ patient.surname }}</td>
+                {% endif %}
+                <td>
+                    <a class="btn btn-success" href="/patients/{{ patient.id }}">Details</a>
+                    <form style="display:inline" action="/patients/{{ patient.id }}" method="post">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                    <a class="btn btn-primary" href="/patients/editar/{{ patient.id }}">Edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td>No hay pacientes que mostrar.</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

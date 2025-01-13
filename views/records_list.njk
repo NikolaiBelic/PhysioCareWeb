@@ -1,0 +1,28 @@
+{% extends "base.njk" %}
+{% block titulo %}Expedientes | Listado{% endblock %}
+{% block contenido %}
+    <h1>Listado de Records</h1>
+    <table width="100%">
+        {% for record in records %}
+            <tr>
+                {% if loop.index % 2 == 0 %}
+                    <td class="par">{{ record.patient.name }} {{ record.patient.surname }}</td>
+                {% else %}
+                    <td class="impar">{{ record.patient.name }} {{ record.patient.surname }}</td>
+                {% endif %}
+                <td>
+                    <a class="btn btn-success" href="/records/{{ record.id }}">Details</a>
+                    <form style="display:inline" action="/records/{{ record.id }}" method="post">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                    <a class="btn btn-primary" href="/record/editar/{{ record.id }}">Add appointment</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td>No hay expedientes que mostrar.</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

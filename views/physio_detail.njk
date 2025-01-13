@@ -1,0 +1,14 @@
+{% extends "base.njk" %}
+
+{% block titulo %}Fisios | Ficha{% endblock %}
+
+{% block contenido %}
+
+    <h1>Ficha de un fisio</h1>
+
+    <p><strong>Name:</strong> {{ physio.name }}</p>
+    <p><strong>Surname:</strong> {{ physio.surname }}</p>
+    <p><strong>Specialty:</strong> {{ physio.specialty }}</p>
+    <p><strong>License number:</strong> {{ physio.licenseNumber }}</p>
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.njk" %}
+
+{% block titulo %}Expedientes | Ficha{% endblock %}
+
+{% block contenido %}
+
+    <h1>Detalles del expediente</h1>
+
+    <div>
+        <p><strong>Name:</strong> {{ record.patient.name }}</p>
+        <p><strong>Surname:</strong> {{ record.patient.surname }}</p>
+        <p><strong>Birth Date:</strong> {{ record.patient.birthDate }}</p>
+        <p><strong>Address:</strong> {{ record.patient.address }}</p>
+        <p><strong>Insurance number:</strong> {{ record.patient.insuranceNumber }}</p>
+    </div>
+
+    <div>
+        <p><strong>Medical record:</strong> {{ record.medicalRecord }}</p>
+        <p><strong>Appointments:</strong></p>
+        <ul>
+            {% for appointment in record.appointments %}
+                <li>
+                    <p><strong>Date:</strong> {{ appointment.date }}</p>
+                    <p><strong>Physio:</strong> {{ appointment.physio.name }} {{ appointment.physio.surname }}, specialist in {{ appointment.physio.specialty }}</p>
+                    <p><strong>Diagnosis:</strong> {{ appointment.diagnosis }}</p>
+                    <p><strong>Treatment:</strong> {{ appointment.treatment }}</p>
+                    <p><strong>Observations:</strong> {{ appointment.observations }}</p>
+                </li>
+            {% else %}
+                <li>No hay citas que mostrar.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+{% endblock %}
