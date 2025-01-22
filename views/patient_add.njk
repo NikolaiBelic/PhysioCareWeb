@@ -1,0 +1,89 @@
+{% extends "base.njk" %}
+
+{% block titulo %}Patients | New{% endblock %}
+
+{% block contenido %}
+
+    <h1>Registro de paciente</h1>
+
+
+    {% if errores.general %}
+        <p class="alert alert-danger">{{ errores.general }}</p>
+    {% endif %}
+
+    <form action="/patients" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>User name: 
+                <input type="text" class="form-control" name="login"
+                placeholder="Nombre de usuario...">
+            </label>
+            {% if errores.login %}
+                <p class="text-danger">{{ errores.login }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Contraseña:
+                <input type="password" class="form-control" name="password"
+                placeholder="Contraseña...">
+            </label>
+            {% if errores.password %}
+                <p class="text-danger">{{ errores.password }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Name:
+                <input type="text" class="form-control" name="name"
+                placeholder="Nombre del paciente...">
+            </label>
+            {% if errores.name %}
+                <p class="text-danger">{{ errores.name }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Surname:
+                <input type="text" class="form-control" name="surname"
+                placeholder="Apellido del paciente...">
+            </label>
+            {% if errores.surname %}
+                <p class="text-danger">{{ errores.surname }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Fecha de nacimiento:
+                <input type="date" class="form-control" name="birthDate"
+                placeholder="Fecha de nacimiento...">
+            </label>
+            {% if errores.birthDate %}
+                <p class="text-danger">{{ errores.birthDate }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Dirección:
+                <input type="text" class="form-control" name="address"
+                placeholder="Dirección...">
+            </label>
+            {% if errores.address %}
+                <p class="text-danger">{{ errores.address }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Insurance number:
+                <input type="text" class="form-control" name="insuranceNumber"
+                placeholder="Insurance number...">
+            </label>
+            {% if errores.insuranceNumber %}
+                <p class="text-danger">{{ errores.insuranceNumber }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Image:
+                <input type="file" class="form-control" name="image"
+                placeholder="Selecciona una imagen...">
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Enviar
+        </button>
+    </form>
+
+{% endblock %}

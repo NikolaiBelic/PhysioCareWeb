@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
+const multer = require('multer');
 
 const saltRounds = 10;
 
@@ -7,6 +7,23 @@ let Patient = require(__dirname + '/../models/patient.js');
 let User = require(__dirname + '/../models/user.js');
 
 let router = express.Router();
+
+// Ejercicio: Middleware para mostrar información de la petición recibida
+router.use((req, res, next) => {
+    console.log(new Date().toString(), "Método:", req.method,
+        ", URL:", req.baseUrl);
+    next();
+});
+
+let storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads')
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + "_" + file.originalname)
+    }
+})
+let upload = multer({ storage: storage });
 
 router.get('/', (req, res) => {
     Patient.find().then(resultado => {
@@ -52,6 +69,10 @@ router.get('/find', (req, res) => {
     }
 });
 
+router.get('/new', (req, res) => {
+    res.render('patient_add');
+});
+
 router.get('/:id', (req, res) => {
     Patient.findById(req.params.id).then(result => {
         if (result)
@@ -62,22 +83,54 @@ router.get('/:id', (req, res) => {
     });
 });
 
-router.post('/', async (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
     try {
+        let newUser = new User({
+            login: req.body.login,
+            password: req.body.password
+        });
+        const userResult = await newUser.save();
+
         let newPatient = new Patient({
+            _id: userResult._id,
             name: req.body.name,
             surname: req.body.surname,
             birthDate: req.body.birthDate,
             address: req.body.address,
             insuranceNumber: req.body.insuranceNumber,
+            image: req.file ? req.file.path : null
         });
+
         const patientResult = await newPatient.save();
-        res.status(201).send({ result: patientResult });
+        res.redirect(req.baseUrl);
+        /* res.status(201).send({ result: patientResult }); */
     } catch (error) {
-        console.error("Error guardando el usuario o el paciente:", error);
-        res.status(500).send({
-            error: "Error interno del servidor"
-        });
+        let errores = {
+            general: 'Error insertando paciente'
+        };
+        if (error.errors.login) {
+            errores.login = error.errors.login.message;
+        }
+        if (error.errors.password) {
+            errores.password = error.errors.password.message;
+        }
+        if (error.errors.name) {
+            errores.name = error.errors.name.message;
+        }
+        if (error.errors.surname) {
+            errores.surname = error.errors.surname.message;
+        }
+        if (error.errors.birthDate) {
+            errores.birthDate = error.errors.birthDate.message;
+        }
+        if (error.errors.address) {
+            errores.address = error.errors.address.message;
+        }
+        if (error.errors.insuranceNumber) {
+            errores.insuranceNumber = error.errors.insuranceNumber.message;
+        }
+
+        res.render('patient_add', { errores: errores, datos: req.body });
     }
 });
 
