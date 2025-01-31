@@ -2,13 +2,30 @@
 {% block titulo %}Pacientes | Listado{% endblock %}
 {% block contenido %}
     <h1>Listado de fisios</h1>
+
+    <form action="/physios/find" method="get" class="form-inline">
+            <label>Specialty:
+                <select class="form-control" name="specialty">
+                    <option value="">Todas las especialidades</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Neurological">Neurological</option>
+                    <option value="Pediatric">Pediatric</option>
+                    <option value="Geriatric">Geriatric</option>
+                    <option value="Oncological">Oncological</option>
+                </select>
+            </label>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+
     <table width="100%">
         {% for physio in physios %}
             <tr>
                 {% if loop.index % 2 == 0 %}
-                    <td class="par">{{ physio.name }} {{ physio.surname }}</td>
+                    <td class="par">{{ physio.name }}
+                        {{ physio.surname }} (esp: {{ physio.specialty }})</td>
                 {% else %}
-                    <td class="impar">{{ physio.name }} {{ physio.surname }}</td>
+                    <td class="impar">{{ physio.name }}
+                        {{ physio.surname }} (esp: {{ physio.specialty }})</td>
                 {% endif %}
                 <td>
                     <a class="btn btn-success" href="/physios/{{ physio.id }}">Details</a>
@@ -16,7 +33,7 @@
                         <input type="hidden" name="_method" value="delete"/>
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
-                    <a class="btn btn-primary" href="/physios/editar/{{ physio.id }}">Edit</a>
+                    <a class="btn btn-primary" href="/physios/{{ physio.id }}/edit">Edit</a>
                 </td>
             </tr>
         {% else %}

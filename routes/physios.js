@@ -1,10 +1,45 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
+const multer = require('multer');
 
 let Physio = require(__dirname + '/../models/physio.js');
+let User = require(__dirname + '/../models/user.js');
+
 let router = express.Router();
 
-router.get('/', (req, res) => {
+router.use((req, res, next) => {
+    console.log(new Date().toString(), "Método:", req.method,
+        ", URL:", req.baseUrl);
+    next();
+});
+
+let storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads')
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + "_" + file.originalname)
+    }
+})
+let upload = multer({ storage: storage });
+
+let autenticacion = (req, res, next) => {
+    if (req.session && req.session.userId) {
+        next();
+    } else {
+        res.redirect('/auth/login');
+    }
+}
+
+let rol = (rol) => {
+    return (req, res, next) => {
+        if (rol === req.session.rol)
+            next();
+        else
+            res.render('/auth/login');
+    }
+}
+
+router.get('/', autenticacion, rol('admin'), rol('physio'), (req, res) => {
     Physio.find().then(resultado => {
         res.render('physios_list', { physios: resultado });
     }).catch(error => {
@@ -13,22 +48,21 @@ router.get('/', (req, res) => {
 });
 
 router.get('/find', (req, res) => {
-        Physio.find({ 
-            specialty: { $regex: new RegExp(`^${req.query.specialty}$`), $options: 'i' } }).then(resultado => {
-            if (resultado.length > 0)
-                res.status(200)
-                    .send({ result: resultado });
-            else {
-                    res.status(404).send({
-                        error: "No se han encontrado fisios con esos criterios"
-                    });
-                }
-        }).catch(error => {
-            res.status(500)
-                .send({
-                    error: "Error interno del servidor"
-                });
-        });
+    let specialty = req.query.specialty ? { specialty: { $regex: req.query.specialty, $options: 'i' } } : {};
+
+    Physio.find(specialty).then(result => {
+        if (result.length > 0) {
+            res.render('physios_list', { physios: result });
+        } else {
+            res.render('error', { error: "No se encontraron pacientes asociados a la especialidad ingresada." });
+        }
+    }).catch(error => {
+        res.render('error', { error: "Hubo un problema al procesar la búsqueda. Inténtelo más tarde." });
+    });
+});
+
+router.get('/new', (req, res) => {
+    res.render('physio_add');
 });
 
 router.get('/:id', (req, res) => {
@@ -43,65 +77,99 @@ router.get('/:id', (req, res) => {
 
 // contraseña, delete, posts, 
 
-router.post('/', async (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
     try {
+        let newUser = new User({
+            login: req.body.login,
+            password: req.body.password,
+            rol: 'physio'
+        });
+        const userResult = await newUser.save();
+
         let newPhysio = new Physio({
+            _id: userResult._id,
             name: req.body.name,
             surname: req.body.surname,
             specialty: req.body.specialty,
-            licenseNumber: req.body.licenseNumber
+            licenseNumber: req.body.licenseNumber,
+            image: req.file ? req.file.filename : null
         });
+
         const physioResult = await newPhysio.save();
-        res.status(201).send({ result: physioResult });
+        res.redirect(req.baseUrl);
     } catch (error) {
-        console.error("Error guardando el fisio:", error);
-        res.status(500).send({
-            error: "Error interno del servidor"
-        });
+        let errores = {
+            general: 'Error insertando fisio'
+        };
+        if (error.errors.login) {
+            errores.login = error.errors.login.message;
+        }
+        if (error.errors.password) {
+            errores.password = error.errors.password.message;
+        }
+        if (error.errors.name) {
+            errores.name = error.errors.name.message;
+        }
+        if (error.errors.surname) {
+            errores.surname = error.errors.surname.message;
+        }
+        if (error.errors.specialty) {
+            errores.specialty = error.errors.specialty.message;
+        }
+        if (error.errors.licenseNumber) {
+            errores.licenseNumber = error.errors.licenseNumber.message;
+        }
+
+        res.render('physio_add', { errores: errores, datos: req.body });
     }
 });
 
-/* router.post('/', (req, res) => {
-    let newPhysio = new Physio({
-        name: req.body.name,
-        surname: req.body.surname,
-        specialty: req.body.specialty,
-        licenseNumber: req.body.licenseNumber
-    });
-    newPhysio.save().then(resultado => {
-        res.status(201)
-            .send({ ok: true, resultado: resultado });
+router.get('/:id/edit', (req, res) => {
+    Physio.findById(req.params.id).then(result => {
+        if (result)
+            res.render('physio_edit', { physio: result });
+        else
+            res.render('error', { error: "Fisio no encontrado" });
     }).catch(error => {
-        res.status(400)
-            .send({
-                ok: false,
-                error: "Error añadiendo fisio"
-            });
     });
-}); */
+});
 
-router.put('/:id', (req, res) => {
-    Physio.findByIdAndUpdate(req.params.id, {
-        $set: {
-            name: req.body.name,
-            surname: req.body.surname,
-            specialty: req.body.specialty,
-            licenseNumber: req.body.licenseNumber
+// MÉTODO POST PARA ACTUALIZAR UN FISIO
+router.post('/:id', upload.single('image'), (req, res) => {
+    Physio.findById(req.params.id).then(existingPhysio => {
+        if (!existingPhysio) {
+            throw new Error('Fisio no encontrado');
         }
-    }, { new: true, runValidators: true }).then(resultado => {
-        if (resultado) {
-            res.status(200)
-                .send({ result: resultado });
-        }
-        else {
-            res.status(400)
-                .send({ error: "Error actualizando los datos del fisio" })
-        }
+
+        return Physio.findByIdAndUpdate(req.params.id, {
+            $set: {
+                name: req.body.name,
+                surname: req.body.surname,
+                specialty: req.body.specialty,
+                licenseNumber: req.body.licenseNumber,
+                image: req.file ? req.file.filename : existingPhysio.image
+            }
+        }, { new: true, runValidators: true });
+    }).then(result => {
+        res.redirect('/physios/' + req.params.id);
     }).catch(error => {
-        res.status(500)
-            .send({
-                error: "Error interno del servidor"
-            });
+        let errores = {
+            general: 'Error actualizando paciente'
+        };
+        if (error.errors.name) {
+            errores.name = error.errors.name.message;
+        }
+        if (error.errors.surname) {
+            errores.surname = error.errors.surname.message;
+        }
+        if (error.errors.specialty) {
+            errores.specialty = error.errors.specialty.message;
+        }
+        if (error.errors.licenseNumber) {
+            errores.licenseNumber = error.errors.licenseNumber.message;
+        }
+
+        res.render('physio_edit', { errores: errores, physio: req.body });
     });
 });
 

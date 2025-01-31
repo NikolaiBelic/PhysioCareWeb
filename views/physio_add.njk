@@ -1,0 +1,85 @@
+{% extends "base.njk" %}
+
+{% block titulo %}Physios | New{% endblock %}
+
+{% block contenido %}
+
+    <h1>Registro de fisio</h1>
+
+    {% if errores.general %}
+        <p class="alert alert-danger">{{ errores.general }}</p>
+    {% endif %}
+
+    <form action="/physios" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>User name: 
+                <input type="text" class="form-control" name="login"
+                placeholder="Nombre de usuario...">
+            </label>
+            {% if errores.login %}
+                <p class="text-danger">{{ errores.login }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Contraseña:
+                <input type="password" class="form-control" name="password"
+                placeholder="Contraseña...">
+            </label>
+            {% if errores.password %}
+                <p class="text-danger">{{ errores.password }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Name:
+                <input type="text" class="form-control" name="name"
+                placeholder="Nombre del paciente...">
+            </label>
+            {% if errores.name %}
+                <p class="text-danger">{{ errores.name }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Surname:
+                <input type="text" class="form-control" name="surname"
+                placeholder="Apellido del paciente...">
+            </label>
+            {% if errores.surname %}
+                <p class="text-danger">{{ errores.surname }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Specialty:
+        <select class="form-control" name="specialty">
+                    <option value="">Seleccione una especialidad</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Neurological">Neurological</option>
+                    <option value="Pediatric">Pediatric</option>
+                    <option value="Geriatric">Geriatric</option>
+                    <option value="Oncological">Oncological</option>
+                </select>
+            </label>
+            {% if errores.specialty %}
+                <p class="text-danger">{{ errores.specialty }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>License number:
+                <input type="text" class="form-control" name="licenseNumber"
+                placeholder="License number...">
+            </label>
+            {% if errores.licenseNumber %}
+                <p class="text-danger">{{ errores.licenseNumber }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Image:
+                <input type="file" class="form-control" name="image"
+                placeholder="Selecciona una imagen...">
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Enviar
+        </button>
+    </form>
+
+{% endblock %}

@@ -34,39 +34,17 @@ router.get('/', (req, res) => {
 });
 
 router.get('/find', (req, res) => {
-    if (req.query.surname === "") {
-        Patient.find().then(result => {
-            if (result)
-                res.status(200)
-                    .send({ result: result });
-            else
-                res.status(404)
-                    .send({
-                        error: "No hay pacientes en el sistema"
-                    });
-        }).catch(error => {
-            res.status(500)
-                .send({
-                    error: "Error interno del servidor"
-                });
-        });
-    } else {
-        Patient.find({ surname: { $regex: req.query.surname /* new RegExp(`^${req.query.surname}$`) */, $options: 'i' } }).then(result => {
-            if (result.length > 0)
-                res.status(200)
-                    .send({ result: result });
-            else
-                res.status(404)
-                    .send({
-                        error: "No se han encontrado pacientes con esos criterios"
-                    });
-        }).catch(error => {
-            res.status(500)
-                .send({
-                    error: "Error interno del servidor"
-                });
-        });
-    }
+    let surname = req.query.surname ? { surname: { $regex: req.query.surname, $options: 'i' } } : {};
+
+    Patient.find(surname).then(result => {
+        if (result.length > 0) {
+            res.render('patients_list', { patients: result });
+        } else {
+            res.render('error', { error: "No se encontraron pacientes asociados al apellido ingresado." });
+        }
+    }).catch(error => {
+        res.render('error', { error: "Hubo un problema al procesar la búsqueda. Inténtelo más tarde." });
+    });
 });
 
 router.get('/new', (req, res) => {
@@ -87,7 +65,8 @@ router.post('/', upload.single('image'), async (req, res) => {
     try {
         let newUser = new User({
             login: req.body.login,
-            password: req.body.password
+            password: req.body.password,
+            rol: 'patient'
         });
         const userResult = await newUser.save();
 
@@ -98,12 +77,11 @@ router.post('/', upload.single('image'), async (req, res) => {
             birthDate: req.body.birthDate,
             address: req.body.address,
             insuranceNumber: req.body.insuranceNumber,
-            image: req.file ? req.file.path : null
+            image: req.file ? req.file.filename : null
         });
 
         const patientResult = await newPatient.save();
         res.redirect(req.baseUrl);
-        /* res.status(201).send({ result: patientResult }); */
     } catch (error) {
         let errores = {
             general: 'Error insertando paciente'
@@ -134,29 +112,56 @@ router.post('/', upload.single('image'), async (req, res) => {
     }
 });
 
-router.put('/:id', (req, res) => {
-    Patient.findByIdAndUpdate(req.params.id, {
-        $set: {
-            name: req.body.name,
-            surname: req.body.surname,
-            birthDate: req.body.birthDate,
-            address: req.body.address,
-            insuranceNumber: req.body.insuranceNumber
-        }
-    }, { new: true, runValidators: true }).then(result => {
-        if (result) {
-            res.status(200)
-                .send({ result: result });
-        }
-        else {
-            res.status(400)
-                .send({ error: "Error actualizando los datos del paciente" })
-        }
+router.get('/:id/edit', (req, res) => {
+    Patient.findById(req.params.id).then(result => {
+        if (result)
+            res.render('patient_edit', { patient: result });
+        else
+            res.render('error', { error: "Paciente no encontrado" });
     }).catch(error => {
-        res.status(500)
-            .send({
-                error: "Error interno del servidor"
-            });
+    });
+});
+
+// MÉTODO PARA ACTUALIZAR UN PACIENTE CON POST
+router.post('/:id', upload.single('image'), (req, res) => {
+    Patient.findById(req.params.id).then(existingPatient => {
+        if (!existingPatient) {
+            throw new Error('Paciente no encontrado');
+        }
+
+        return Patient.findByIdAndUpdate(req.params.id, {
+            $set: {
+                name: req.body.name,
+                surname: req.body.surname,
+                birthDate: req.body.birthDate,
+                address: req.body.address,
+                insuranceNumber: req.body.insuranceNumber,
+                image: req.file ? req.file.filename : existingPatient.image
+            }
+        }, { new: true, runValidators: true });
+    }).then(result => {
+        res.redirect('/patients/' + req.params.id);
+    }).catch(error => {
+        let errores = {
+            general: 'Error actualizando paciente'
+        };
+        if (error.errors.name) {
+            errores.name = error.errors.name.message;
+        }
+        if (error.errors.surname) {
+            errores.surname = error.errors.surname.message;
+        }
+        if (error.errors.birthDate) {
+            errores.birthDate = error.errors.birthDate.message;
+        }
+        if (error.errors.address) {
+            errores.address = error.errors.address.message;
+        }
+        if (error.errors.insuranceNumber) {
+            errores.insuranceNumber = error.errors.insuranceNumber.message;
+        }
+
+        res.render('patient_edit', { errores: errores, patient: req.body });
     });
 });
 

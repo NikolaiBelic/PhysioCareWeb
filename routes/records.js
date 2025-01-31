@@ -2,6 +2,8 @@ const express = require('express');
 
 let Record = require(__dirname + '/../models/record.js');
 let Patient = require(__dirname + '/../models/patient.js');
+let Physio = require(__dirname + '/../models/physio.js');
+
 let router = express.Router();
 
 router.get('/', (req, res) => {
@@ -14,24 +16,34 @@ router.get('/', (req, res) => {
 
 // ARREGLAR PARA BUSCAR TODOS LOS PACIENTES CON EL MISMO APELLIDO
 router.get('/find', (req, res) => {
-    Patient.find({ surname: { $regex: req.query.surname/* new RegExp(`^${req.query.surname}$`) */, $options: 'i' } }).then(resultSurname => {
-        if (resultSurname) {
-            Record.find({ patient: resultSurname[0]._id }, 'medicalRecord appointments -_id').then(result => {
-                if (result.length > 0)
-                    res.status(200)
-                        .send({ result: result });
-                else
-                    res.status(404)
-                        .send({
-                            error: "No se han encontrado expedientes con esos criterios"
-                        });
-            }).catch(error => {
-                res.status(500)
-                    .send({
-                        error: "Error interno del servidor"
-                    });
-            });
+    let surnameQuery = req.query.surname ? { surname: { $regex: req.query.surname, $options: 'i' } } : {};
+
+    Patient.find(surnameQuery).then(patients => {
+        if (patients.length > 0) {
+            let patientIds = patients.map(patient => patient._id);
+            return Record.find({ patient: { $in: patientIds } }).populate('patient');
+        } else {
+            res.render('error', { error: "No se encontraron expedientes asociados al apellido ingresado." });
+            return null; // Añadir esta línea para evitar que se intente enviar otra respuesta
         }
+    }).then(records => {
+        if (records) {
+            if (records.length > 0) {
+                res.render('records_list', { records: records });
+            } else {
+                res.render('error', { error: "No se encontraron expedientes asociados al apellido ingresado." });
+            }
+        }
+    }).catch(error => {
+        res.render('error', { error: "Hubo un problema al procesar la búsqueda. Inténtelo más tarde." });
+    });
+});
+
+router.get('/new', (req, res) => {
+    Patient.find().then(patients => {
+        res.render('record_add', { patients: patients });
+    }).catch(error => {
+        res.render('error', { error: 'Error cargando el formulario de nuevo expediente' });
     });
 });
 
@@ -55,46 +67,98 @@ router.post('/', (req, res) => {
         patient: req.body.patient,
         medicalRecord: req.body.medicalRecord
     });
+
     newRecord.save().then(result => {
-        res.status(201)
-            .send({ result: result });
+        res.redirect('/records');
     }).catch(error => {
-        res.status(400)
-            .send({
-                error: "Error añadiendo expediente"
+        let errores = {
+            general: 'Error insertando expediente'
+        };
+        if (error.errors) {
+            if (error.errors.patient) {
+                errores.patient = error.errors.patient.message;
+            }
+            if (error.errors.medicalRecord) {
+                errores.medicalRecord = error.errors.medicalRecord.message;
+            }
+        } else {
+            errores.general = 'Error interno del servidor';
+        }
+        Patient.find().then(patients => {
+            res.render('record_add', { errores: errores, datos: req.body, patients: patients });
+        }).catch(err => {
+            res.render('error', { error: 'Error cargando el formulario de nuevo expediente' });
+        });
+    });
+});
+
+router.get('/:id/appointments/new', (req, res) => {
+    Record.findById(req.params.id).populate('patient').then(record => {
+        if (record) {
+            Physio.find().then(physios => {
+                res.render('record_add_appointment', { record: record, physios: physios });
+            }).catch(error => {
+                res.render('error', { error: 'Error cargando la lista de fisios' });
             });
+        } else {
+            res.render('error', { error: "Expediente no encontrado" });
+        }
+    }).catch(error => {
+        res.render('error', { error: 'Error cargando el formulario de nueva cita' });
     });
 });
 
 router.post('/:id/appointments', (req, res) => {
-    Record.findOne({ patient: req.params.id }).then(result => {
-        if (result) {
-            result.appointments.push({
+    Record.findById(req.params.id).then(record => {
+        if (record) {
+            record.appointments.push({
                 date: req.body.date,
                 physio: req.body.physio,
                 diagnosis: req.body.diagnosis,
                 treatment: req.body.treatment,
                 observations: req.body.observations
             });
-            console.log(result.appointments);
-            result.save().then(savedResult => {
-                res.status(201).send({ 
-                    result: savedResult 
-                });
-            }).catch(error => {
-                console.error("Error al guardar el expediente:", error);
-                res.status(500).send({
-                    error: "Error interno del servidor"
-                });
-            });
+            return record.save();
         } else {
-            res.status(404).send({
-                error: "Expediente no encontrado"
-            });
+            res.render('error', { error: "Expediente no encontrado" });
         }
+    }).then(result => {
+        res.redirect('/records/' + req.params.id);
     }).catch(error => {
-        res.status(500).send({
-            error: "Error interno del servidor"
+        let errores = {
+            general: 'Error insertando cita'
+        };
+        console.log(error);
+        console.log('-------------------');
+        console.log(error.errors);
+        console.log(error.errors['appointments.0.date']);
+        if (error.errors) {
+            if (error.errors['appointments.0.date']) {
+                errores.date = error.errors['appointments.0.date'].message;
+            }
+            if (error.errors['appointments.0.physio']) {
+                errores.physio = error.errors['appointments.0.physio'].message;
+            }
+            if (error.errors['appointments.0.diagnosis']) {
+                errores.diagnosis = error.errors['appointments.0.diagnosis'].message;
+            }
+            if (error.errors['appointments.0.treatment']) {
+                errores.treatment = error.errors['appointments.0.treatment'].message;
+            }
+            if (error.errors['appointments.0.observations']) {
+                errores.observations = error.errors['appointments.0.observations'].message;
+            }
+        } else {
+            errores.general = 'Error interno del servidor';
+        }
+        Record.findById(req.params.id).populate('patient').then(record => {
+            Physio.find().then(physios => {
+                res.render('record_add_appointment', { errores: errores, datos: req.body, record: record, physios: physios });
+            }).catch(err => {
+                res.render('error', { error: 'Error cargando la lista de fisios' });
+            });
+        }).catch(err => {
+            res.render('error', { error: 'Error cargando el formulario de nueva cita' });
         });
     });
 });

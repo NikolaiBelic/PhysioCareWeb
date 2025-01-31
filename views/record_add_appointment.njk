@@ -1,0 +1,59 @@
+{% extends "base.njk" %}
+
+{% block titulo %}Añadir Cita{% endblock %}
+
+{% block contenido %}
+    <h1>Añadir Cita a Expediente Médico</h1>
+
+    {% if errores.general %}
+        <p class="alert alert-danger">{{ errores.general }}</p>
+    {% endif %}
+
+    <form action="/records/{{ record._id }}/appointments" method="post">
+        <div class="form-group">
+            <label>Fecha:
+                <input type="date" class="form-control" name="date" value="{{ datos.date }}">
+            </label>
+            {% if errores.date %}
+                <p class="text-danger">{{ errores.date }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Fisio:
+                <select class="form-control" name="physio">
+                    {% for physio in physios %}
+                        <option value="{{ physio._id }}" {% if datos.physio == physio._id %}selected{% endif %}>{{ physio.name }} {{ physio.surname }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            {% if errores.physio %}
+                <p class="text-danger">{{ errores.physio }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Diagnóstico:
+                <textarea class="form-control" name="diagnosis" rows="3">{{ datos.diagnosis }}</textarea>
+            </label>
+            {% if errores.diagnosis %}
+                <p class="text-danger">{{ errores.diagnosis }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Tratamiento:
+                <textarea class="form-control" name="treatment" rows="3">{{ datos.treatment }}</textarea>
+            </label>
+            {% if errores.treatment %}
+                <p class="text-danger">{{ errores.treatment }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Observaciones:
+                <textarea class="form-control" name="observations" rows="3">{{ datos.observations }}</textarea>
+            </label>
+            {% if errores.observations %}
+                <p class="text-danger">{{ errores.observations }}</p>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Añadir Cita</button>
+    </form>
+{% endblock %}

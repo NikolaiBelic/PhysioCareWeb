@@ -2,6 +2,12 @@
 {% block titulo %}Pacientes | Listado{% endblock %}
 {% block contenido %}
     <h1>Listado de pacientes</h1>
+    
+    <form action="/patients/find" method="get">
+        <input type="text" name="surname" placeholder="Buscar por apellido">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
     <table width="100%">
         {% for patient in patients %}
             <tr>
@@ -16,7 +22,7 @@
                         <input type="hidden" name="_method" value="delete"/>
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
-                    <a class="btn btn-primary" href="/patients/editar/{{ patient.id }}">Edit</a>
+                    <a class="btn btn-primary" href="/patients/{{ patient.id }}/edit">Edit</a>
                 </td>
             </tr>
         {% else %}

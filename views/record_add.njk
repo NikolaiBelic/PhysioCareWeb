@@ -1,0 +1,35 @@
+{% extends "base.njk" %}
+
+{% block titulo %}Nuevo Expediente{% endblock %}
+
+{% block contenido %}
+    <h1>Registrar Nuevo Expediente Médico</h1>
+
+    {% if errores.general %}
+        <p class="alert alert-danger">{{ errores.general }}</p>
+    {% endif %}
+
+    <form action="/records" method="post">
+        <div class="form-group">
+            <label>Paciente:
+                <select class="form-control" name="patient">
+                    {% for patient in patients %}
+                        <option value="{{ patient._id }}">{{ patient.name }} {{ patient.surname }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            {% if errores.patient %}
+                <p class="text-danger">{{ errores.patient }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Expediente Médico:
+                <textarea class="form-control" name="medicalRecord" rows="5">{{ datos.medicalRecord }}</textarea>
+            </label>
+            {% if errores.medicalRecord %}
+                <p class="text-danger">{{ errores.medicalRecord }}</p>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Registrar</button>
+    </form>
+{% endblock %}

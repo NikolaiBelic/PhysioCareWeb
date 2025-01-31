@@ -11,12 +11,12 @@ let userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Password is required'],
         minlength: [7, 'Password must be at least 7 characters']
-    }/* ,
+    },
     rol: {
         type: String,
         required: true,
         enum: ['admin', 'physio', 'patient']
-    } */
+    }
 });
 
 let User = mongoose.model('users', userSchema);

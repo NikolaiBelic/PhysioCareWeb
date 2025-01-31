@@ -1,0 +1,68 @@
+{% extends "base.njk" %}
+
+{% block titulo %}Patients | Edit{% endblock %}
+
+{% block contenido %}
+
+    <h1>Edición de paciente</h1>
+
+
+    {% if errores.general %}
+        <p class="alert alert-danger">{{ errores.general }}</p>
+    {% endif %}
+
+    <form action="/patients/{{ patient.id }}" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="_method" value="put">
+        <div class="form-group">
+            <label>Name:
+                <input type="text" class="form-control" name="name" value="{{ patient.name }}">
+            </label>
+            {% if errores.name %}
+                <p class="text-danger">{{ errores.name }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Surname:
+                <input type="text" class="form-control" name="surname" value="{{ patient.surname }}">
+            </label>
+            {% if errores.surname %}
+                <p class="text-danger">{{ errores.surname }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Fecha de nacimiento:
+                <input type="date" class="form-control" name="birthDate" value="{{ patient.birthDate | date('YYYY-MM-DD') }}">
+            </label>
+            {% if errores.birthDate %}
+                <p class="text-danger">{{ errores.birthDate }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Dirección:
+                <input type="text" class="form-control" name="address" value="{{ patient.address }}">
+            </label>
+            {% if errores.address %}
+                <p class="text-danger">{{ errores.address }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Insurance number:
+                <input type="text" class="form-control" name="insuranceNumber" value="{{ patient.insuranceNumber }}">
+            </label>
+            {% if errores.insuranceNumber %}
+                <p class="text-danger">{{ errores.insuranceNumber }}</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>Image:
+                <input type="file" class="form-control" name="image">
+            </label>
+            <p>Si no selecciona una imagen, se mantendrá la actual. Imagen actual:</p>
+            <img src="/public/uploads/{{ patient.image }}" width="100">
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Enviar
+        </button>
+    </form>
+
+{% endblock %}
