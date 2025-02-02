@@ -13,4 +13,6 @@
     <p><strong>Insurance number:</strong> {{ patient.insuranceNumber }}</p>
     <p><strong>Imagen:</strong> <img src="../public/uploads/{{ patient.image }}"></p>
 
+    <a class="btn btn-primary" href="/records/{{ record.id }}">Ver expediente</a>
+
 {% endblock %}

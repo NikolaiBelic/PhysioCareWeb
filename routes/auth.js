@@ -10,7 +10,7 @@ router.get('/login', (req, res) => {
 
 router.get('/logout', (req, res) => {
     req.session.destroy();
-    res.redirect('/');
+    res.redirect('/home');
 });
 
 router.post('/login', (req, res) => {
@@ -26,7 +26,7 @@ router.post('/login', (req, res) => {
             req.session.userId = user._id;
             req.session.login = user.login;
             req.session.rol = user.rol;
-            res.redirect('/patients');
+            res.redirect('/home');
         } else {
             res.render('login', { error: 'Contraseña incorrecta' });
         }

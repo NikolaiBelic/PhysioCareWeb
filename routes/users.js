@@ -1,5 +1,4 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
 
 let User = require(__dirname + '/../models/user.js');
 
@@ -24,10 +23,9 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
     let newUser = new User({
         login: req.body.login,
-        password: hashedPassword,
+        password: req.body.password,
         rol: req.body.rol
     });
     newUser.save().then(result => {

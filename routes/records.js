@@ -6,7 +6,25 @@ let Physio = require(__dirname + '/../models/physio.js');
 
 let router = express.Router();
 
-router.get('/', (req, res) => {
+let autenticacion = (req, res, next) => {
+    if (req.session && req.session.userId) {
+        next();
+    } else {
+        res.render('error', { error: 'No tiene permisos para acceder a esta página' });
+    }
+}
+
+let rol = (rol) => {
+    return (req, res, next) => {
+        if (rol.includes(req.session.rol)) {
+            next();
+        } else {
+            res.render('error', { error: 'No tiene permisos para acceder a esta página' });
+        }
+    }
+}
+
+router.get('/', autenticacion, rol(['admin', 'physio']), (req, res) => {
     Record.find().populate('patient').then(result => {
         res.render('records_list', { records: result });
     }).catch(error => {
@@ -15,7 +33,7 @@ router.get('/', (req, res) => {
 });
 
 // ARREGLAR PARA BUSCAR TODOS LOS PACIENTES CON EL MISMO APELLIDO
-router.get('/find', (req, res) => {
+router.get('/find', autenticacion, rol(['admin', 'physio']), (req, res) => {
     let surnameQuery = req.query.surname ? { surname: { $regex: req.query.surname, $options: 'i' } } : {};
 
     Patient.find(surnameQuery).then(patients => {
@@ -39,7 +57,7 @@ router.get('/find', (req, res) => {
     });
 });
 
-router.get('/new', (req, res) => {
+router.get('/new', autenticacion, rol(['admin', 'physio']), (req, res) => {
     Patient.find().then(patients => {
         res.render('record_add', { patients: patients });
     }).catch(error => {
@@ -48,21 +66,28 @@ router.get('/new', (req, res) => {
 });
 
 // POR ID DE PACIENTE
-router.get('/:id', (req, res) => {
+router.get('/:id', autenticacion, rol(['admin', 'physio', 'patient']), (req, res) => {
     Record.findById(req.params.id).populate('patient').populate({
         path: 'appointments',
         populate: { path: 'physio' }
     }).then(resultado => {
-        if (resultado)
+        if (!resultado) {
+            return res.render('error', { error: 'Expediente no encontrado' });
+        }
+
+        if (req.session.rol === 'admin' || req.session.rol === 'physio') {
             res.render('record_detail', { record: resultado });
-        else
-            res.render('error', { error: 'Expediente no encontrado' });
+        } else if (req.session.rol === 'patient' && req.session.userId.toString() === resultado.patient._id.toString()) {
+            res.render('record_detail', { record: resultado });
+        } else {
+            res.render('error', { error: 'No tiene permisos para acceder a esta página' });
+        }
     }).catch(error => {
         res.render('error', { error: 'Error buscando expediente' });
     });
 });
 
-router.post('/', (req, res) => {
+router.post('/', autenticacion, rol(['admin', 'physio']), (req, res) => {
     let newRecord = new Record({
         patient: req.body.patient,
         medicalRecord: req.body.medicalRecord
@@ -92,7 +117,7 @@ router.post('/', (req, res) => {
     });
 });
 
-router.get('/:id/appointments/new', (req, res) => {
+router.get('/:id/appointments/new', autenticacion, rol(['admin', 'physio']), (req, res) => {
     Record.findById(req.params.id).populate('patient').then(record => {
         if (record) {
             Physio.find().then(physios => {
@@ -108,7 +133,7 @@ router.get('/:id/appointments/new', (req, res) => {
     });
 });
 
-router.post('/:id/appointments', (req, res) => {
+router.post('/:id/appointments', autenticacion, rol(['admin', 'physio']), (req, res) => {
     Record.findById(req.params.id).then(record => {
         if (record) {
             record.appointments.push({
@@ -128,10 +153,6 @@ router.post('/:id/appointments', (req, res) => {
         let errores = {
             general: 'Error insertando cita'
         };
-        console.log(error);
-        console.log('-------------------');
-        console.log(error.errors);
-        console.log(error.errors['appointments.0.date']);
         if (error.errors) {
             if (error.errors['appointments.0.date']) {
                 errores.date = error.errors['appointments.0.date'].message;
@@ -163,7 +184,7 @@ router.post('/:id/appointments', (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', autenticacion, rol(['admin', 'physio']), (req, res) => {
     Record.findByIdAndDelete(req.params.id).then(result => {
         res.redirect(req.baseUrl);
     }).catch(error => {

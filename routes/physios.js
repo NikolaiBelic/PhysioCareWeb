@@ -26,20 +26,21 @@ let autenticacion = (req, res, next) => {
     if (req.session && req.session.userId) {
         next();
     } else {
-        res.redirect('/auth/login');
+        res.render('error', { error: 'No tiene permisos para acceder a esta página' });
     }
 }
 
 let rol = (rol) => {
     return (req, res, next) => {
-        if (rol === req.session.rol)
+        if (rol.includes(req.session.rol)) {
             next();
-        else
-            res.render('/auth/login');
+        } else {
+            res.render('error', { error: 'No tiene permisos para acceder a esta página' });
+        }
     }
 }
 
-router.get('/', autenticacion, rol('admin'), rol('physio'), (req, res) => {
+router.get('/', autenticacion, rol('admin'), (req, res) => {
     Physio.find().then(resultado => {
         res.render('physios_list', { physios: resultado });
     }).catch(error => {
@@ -47,7 +48,7 @@ router.get('/', autenticacion, rol('admin'), rol('physio'), (req, res) => {
     });
 });
 
-router.get('/find', (req, res) => {
+router.get('/find', autenticacion, rol('admin'), (req, res) => {
     let specialty = req.query.specialty ? { specialty: { $regex: req.query.specialty, $options: 'i' } } : {};
 
     Physio.find(specialty).then(result => {
@@ -61,11 +62,11 @@ router.get('/find', (req, res) => {
     });
 });
 
-router.get('/new', (req, res) => {
+router.get('/new', autenticacion, rol('admin'), (req, res) => {
     res.render('physio_add');
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', autenticacion, rol('admin'), (req, res) => {
     Physio.findById(req.params.id).then(result => {
         if (result)
             res.render('physio_detail', { physio: result });
@@ -77,7 +78,7 @@ router.get('/:id', (req, res) => {
 
 // contraseña, delete, posts, 
 
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', autenticacion, rol('admin'), upload.single('image'), async (req, res) => {
     try {
         let newUser = new User({
             login: req.body.login,
@@ -124,7 +125,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     }
 });
 
-router.get('/:id/edit', (req, res) => {
+router.get('/:id/edit', autenticacion, rol('admin'), (req, res) => {
     Physio.findById(req.params.id).then(result => {
         if (result)
             res.render('physio_edit', { physio: result });
@@ -135,7 +136,7 @@ router.get('/:id/edit', (req, res) => {
 });
 
 // MÉTODO POST PARA ACTUALIZAR UN FISIO
-router.post('/:id', upload.single('image'), (req, res) => {
+router.post('/:id', autenticacion, rol('admin'), upload.single('image'), (req, res) => {
     Physio.findById(req.params.id).then(existingPhysio => {
         if (!existingPhysio) {
             throw new Error('Fisio no encontrado');
@@ -173,7 +174,7 @@ router.post('/:id', upload.single('image'), (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', autenticacion, rol('admin'), (req, res) => {
     Physio.findByIdAndDelete(req.params.id)
         .then(resultado => {
             if (resultado) {

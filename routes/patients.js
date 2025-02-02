@@ -4,6 +4,7 @@ const multer = require('multer');
 const saltRounds = 10;
 
 let Patient = require(__dirname + '/../models/patient.js');
+let Record = require(__dirname + '/../models/record.js');
 let User = require(__dirname + '/../models/user.js');
 
 let router = express.Router();
@@ -25,7 +26,25 @@ let storage = multer.diskStorage({
 })
 let upload = multer({ storage: storage });
 
-router.get('/', (req, res) => {
+let autenticacion = (req, res, next) => {
+    if (req.session && req.session.userId) {
+        next();
+    } else {
+        res.render('error', { error: 'No tiene permisos para acceder a esta página' });
+    }
+}
+
+let rol = (rol) => {
+    return (req, res, next) => {
+        if (rol.includes(req.session.rol)) {
+            next();
+        } else {
+            res.render('error', { error: 'No tiene permisos para acceder a esta página' });
+        }
+    }
+}
+
+router.get('/', autenticacion, rol(['admin', 'physio']), (req, res) => {
     Patient.find().then(resultado => {
         res.render('patients_list', { patients: resultado });
     }).catch(error => {
@@ -33,7 +52,7 @@ router.get('/', (req, res) => {
     });
 });
 
-router.get('/find', (req, res) => {
+router.get('/find', autenticacion, rol(['admin', 'physio']), (req, res) => {
     let surname = req.query.surname ? { surname: { $regex: req.query.surname, $options: 'i' } } : {};
 
     Patient.find(surname).then(result => {
@@ -47,21 +66,37 @@ router.get('/find', (req, res) => {
     });
 });
 
-router.get('/new', (req, res) => {
+router.get('/new', autenticacion, rol(['admin', 'physio']), (req, res) => {
     res.render('patient_add');
 });
 
-router.get('/:id', (req, res) => {
-    Patient.findById(req.params.id).then(result => {
-        if (result)
-            res.render('patient_detail', { patient: result });
-        else
-            res.render('error', { error: "Paciente no encontrado" });
+router.get('/:id', autenticacion, rol(['admin', 'physio', 'patient']), (req, res) => {
+    Patient.findById(req.params.id).then(patient => {
+        if (!patient) {
+            return res.render('error', { error: 'Paciente no encontrado' });
+        }
+
+        Record.findOne({ patient: patient._id }).then(record => {
+            if (!record) {
+                return res.render('error', { error: 'Expediente no encontrado' });
+            }
+
+            if (req.session.rol === 'admin' || req.session.rol === 'physio') {
+                res.render('patient_detail', { patient: patient, record: record });
+            } else if (req.session.rol === 'patient' && req.session.userId.toString() === patient._id.toString()) {
+                res.render('patient_detail', { patient: patient, record: record });
+            } else {
+                res.render('error', { error: 'No tiene permisos para acceder a esta página' });
+            }
+        }).catch(error => {
+            res.render('error', { error: 'Error buscando expediente' });
+        });
     }).catch(error => {
+        res.render('error', { error: 'Error buscando paciente' });
     });
 });
 
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', autenticacion, rol(['admin', 'physio']), upload.single('image'), async (req, res) => {
     try {
         let newUser = new User({
             login: req.body.login,
@@ -112,7 +147,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     }
 });
 
-router.get('/:id/edit', (req, res) => {
+router.get('/:id/edit', autenticacion, rol(['admin', 'physio']), (req, res) => {
     Patient.findById(req.params.id).then(result => {
         if (result)
             res.render('patient_edit', { patient: result });
@@ -123,7 +158,7 @@ router.get('/:id/edit', (req, res) => {
 });
 
 // MÉTODO PARA ACTUALIZAR UN PACIENTE CON POST
-router.post('/:id', upload.single('image'), (req, res) => {
+router.post('/:id', autenticacion, rol(['admin', 'physio']), upload.single('image'), (req, res) => {
     Patient.findById(req.params.id).then(existingPatient => {
         if (!existingPatient) {
             throw new Error('Paciente no encontrado');
@@ -165,7 +200,7 @@ router.post('/:id', upload.single('image'), (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', autenticacion, rol(['admin', 'physio']), (req, res) => {
     Patient.findByIdAndDelete(req.params.id).then(resultado => {
         res.redirect(req.baseUrl);
     }).catch(error => {

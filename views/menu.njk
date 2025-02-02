@@ -1,24 +1,130 @@
-{# 
-<div class="alert alert-secondary">
-<a href="/patients">Listado de pacientes</a>
-&nbsp;&nbsp;
-<a href="/patients/new">Nuevo paciente</a>
-&nbsp;&nbsp;
-<a href="/physios">Listado de fisios</a>
-&nbsp;&nbsp;
-<a href="/physios/new">Nuevo fisio</a>
-&nbsp;&nbsp;
-<a href="/records">Listado de records</a>
-&nbsp;&nbsp;
-<a href="/records/new">Nuevo Record</a>
-</div> #}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+{# <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <div class="collapse navbar-collapse">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
                 <li class="nav-item">
                     <a class="nav-link active" href="#">Inicio</a>
                 </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="/patients" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Patients</a>
+                    <ul class="dropdown-menu bg-dark">
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/patients">Listado pacientes</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/patients/new">Registro paciente</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/patients/{{ session.userId }}">Mi información</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/patients">Búsqueda por apellido</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Physios</a>
+                    <ul class="dropdown-menu bg-dark">
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/physios">Listado physios</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/physios/new">Registro physio</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/physios">Búsqueda por especialidad</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Expedientes</a>
+                    <ul class="dropdown-menu bg-dark">
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/records">Listado expedientes</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/records/new">Nuevo expediente</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/records/{{ session.userId }}">Mi expediente</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    {% if session.userId %}
+                    <a class="nav-link" href="/auth/logout">Logout</a>
+                    {% else %}
+                    <a class="nav-link" href="/auth/login">Login</a>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav> #}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/home">Inicio</a>
+                </li>
+                {% if session.rol == 'admin' %}
+                <!-- Menú para administradores -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="/patients" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Patients</a>
+                    <ul class="dropdown-menu bg-dark">
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/patients">Listado pacientes</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/patients/new">Registro paciente</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/patients">Búsqueda por apellido</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Physios</a>
+                    <ul class="dropdown-menu bg-dark">
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/physios">Listado physios</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/physios/new">Registro physio</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/physios">Búsqueda por especialidad</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Expedientes</a>
+                    <ul class="dropdown-menu bg-dark">
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/records">Listado expedientes</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white bg-dark" href="/records/new">Nuevo expediente</a>
+                        </li>
+                    </ul>
+                </li>
+                {% elif session.rol == 'patient' %}
+                <!-- Menú para pacientes -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/patients/{{ session.userId }}">Mi información</a>
+                </li>
+                {% elif session.rol == 'physio' %}
+                <!-- Menú para fisioterapeutas -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="/patients" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Patients</a>
                     <ul class="dropdown-menu bg-dark">
@@ -34,20 +140,6 @@
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Physios</a>
-                    <ul class="dropdown-menu bg-dark">
-                        <li>
-                            <a class="dropdown-item text-white bg-dark" href="/physios">Listado physios</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-white bg-dark" href="/physios/new">Registro physio</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-white bg-dark" href="#">Búsqueda por especialidad</a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Expedientes</a>
                     <ul class="dropdown-menu bg-dark">
                         <li>
@@ -58,14 +150,17 @@
                         </li>
                     </ul>
                 </li>
+                {% endif %}
             </ul>
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    {% if (session and session.userId) %}
+                    {% if session.userId %}
                     <a class="nav-link" href="/auth/logout">Logout</a>
                     {% else %}
                     <a class="nav-link" href="/auth/login">Login</a>
                     {% endif %}
                 </li>
             </ul>
-        </nav>
+        </div>
+    </div>
+</nav>

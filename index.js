@@ -56,8 +56,9 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
+app.get('/home', (req, res) => {
+    res.render('home');
+});
+
 app.listen(8080);
 
-// result en vez de result
-// quitar todos los ok
-// mismo servicio post de paciente y fisio se crea el usuario y se le añade al paciente el id de ese usuario
