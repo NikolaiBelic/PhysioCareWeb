@@ -14,7 +14,7 @@ const records = require(__dirname + "/routes/records");
 const auth = require(__dirname + "/routes/auth");
 const users = require(__dirname + "/routes/users");
 
-mongoose.connect('mongodb://127.0.0.1:27017/physiocare');
+mongoose.connect('mongodb://mymongodb:27017/physiocare');
 
 let app = express();
 
