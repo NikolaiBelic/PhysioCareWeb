@@ -3,7 +3,7 @@ services:
     container_name: appPhysiocare
     build: .
     ports:
-      - "80:81"
+      - "80:8080"
     restart: unless-stopped
     volumes:
       - .:/usr/src/app
