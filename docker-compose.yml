@@ -1,6 +1,6 @@
 services:
   app:
-    container_name: applibros
+    container_name: appPhysiocare
     build: .
     ports:
       - "80:81"
